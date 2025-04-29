@@ -709,26 +709,7 @@
                     <view key="view" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <subviews>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="BEG-Iz-6aC">
-                                <rect key="frame" x="203" y="118" width="75" height="32"/>
-                                <buttonCell key="cell" type="push" title="Button" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cCl-OQ-I0F">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="download:" target="XfG-lQ-9wD" id="UwE-a5-Xg5"/>
-                                </connections>
-                            </button>
-                        </subviews>
-                        <constraints>
-                            <constraint firstItem="BEG-Iz-6aC" firstAttribute="centerX" secondItem="m2S-Jp-Qdl" secondAttribute="centerX" id="fv6-7d-MC5"/>
-                            <constraint firstItem="BEG-Iz-6aC" firstAttribute="centerY" secondItem="m2S-Jp-Qdl" secondAttribute="centerY" id="xxo-0O-WjX"/>
-                        </constraints>
                     </view>
-                    <connections>
-                        <outlet property="downloadBtn" destination="BEG-Iz-6aC" id="v9i-N5-jL4"/>
-                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>

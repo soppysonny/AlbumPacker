@@ -30,20 +30,21 @@ class ViewController: NSViewController {
         super.loadView()
         view = NSView(frame: CGRect(x: 0, y: 0, width: 1200, height: 800))
         view.wantsLayer = true
-        view.layer?.backgroundColor = .white
+//        view.layer?.backgroundColor = .white
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         let stackView = NSStackView()
         stackView.orientation = .vertical
+        stackView.alignment = .leading
         configItems.forEach { item in
             let row = createSettingRow(item: item)
             stackView.addArrangedSubview(row)
         }
         view.addSubview(stackView)
         stackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalTo(NSEdgeInsets(top: 30, left: 30, bottom: -30, right: -30))
         }
         downloadsDirectory = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
     }
