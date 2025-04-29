@@ -13,18 +13,22 @@ class ViewController: NSViewController {
     var downloadsDirectory: URL?
 
     private var downloadBtn = NSButton()
+    
+    private let photoListView = NSCollectionView()
+    
+    private var result: PHFetchResult<PHAsset> = .init()
+    
     override var representedObject: Any? {
         didSet {
         // Update the view, if already loaded.
         }
     }
      
-    private var configItems: [SettingItem] = [
-        .init(title: "下载隐藏项", options: ["是", "否"], storageKey: "downloadhiddenitem"),
-        .init(title: "下载照片类型", options: ["全部", "共享相册", "iTunesSynced"], storageKey: "albumtype"),
-        .init(title: "是否下载连拍照片", options: ["是", "否"], storageKey: "downloadBurst")
+    private var configItems: [SettingType] = [
+        .targetType,
+        .downloadHidden,
+        .downloadBurst
     ]
- 
  
     override func loadView() {
         super.loadView()
@@ -44,13 +48,26 @@ class ViewController: NSViewController {
         }
         view.addSubview(stackView)
         stackView.snp.makeConstraints { make in
-            make.edges.equalTo(NSEdgeInsets(top: 30, left: 30, bottom: -30, right: -30))
+            make.left.top.equalTo(30)
+            make.right.equalTo(-30)
         }
+        
+        view.addSubview(photoListView)
+        photoListView.snp.makeConstraints { make in
+            make.top.equalTo(stackView.snp.bottom)
+            make.left.equalTo(30)
+            make.bottom.right.equalTo(-30)
+        }
+        photoListView.delegate = self
+        photoListView.dataSource = self
+        photoListView.register(PhotoCell.self, forItemWithIdentifier: "PhotoCell")
         downloadsDirectory = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
     }
-    private func createSettingRow(item: SettingItem) -> NSView {
+    
+    
+    private func createSettingRow(item: SettingType) -> NSView {
         let row = NSStackView()
-        row.distribution = .fillEqually
+        row.distribution = .gravityAreas
         
         // 标题标签
         let label = NSTextField(labelWithString: item.title)
@@ -58,7 +75,7 @@ class ViewController: NSViewController {
         
         // 下拉菜单
         let popup = NSPopUpButton()
-        popup.addItems(withTitles: item.options)
+        popup.addItems(withTitles: item.options.map { $0.title })
         popup.selectItem(at: UserDefaults.standard.integer(forKey: item.storageKey))
         popup.target = self
         popup.action = #selector(popupValueChanged(_:))
@@ -74,6 +91,32 @@ class ViewController: NSViewController {
         UserDefaults.standard.set(sender.indexOfSelectedItem, forKey: key)
     }
  
+    private let cachingManager = PHCachingImageManager()
+    
+    func checkAuth(completion: ((PHAuthorizationStatus)->Void)) {
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            completion(status)
+        }
+    }
+    
+    func reloadPhotoList() {
+        checkAuth { status in
+            guard status == .authorized else { return }
+            
+        }
+        var fetchOption = PHFetchOptions()
+        fetchOption.includeAssetSourceTypes = [.typeUserLibrary, .typeCloudShared, .typeiTunesSynced]
+        fetchOption.fetchLimit = 1000
+        let asset  = PHAsset.fetchAssets(with: fetchOption)
+        asset.enumerateObjects { asset, index, stop in
+        
+        }
+//        cachingManager.startCachingImages(for: self.result,
+//                                          targetSize: CGSize(width: 100, height: 100),
+//                                          contentMode: .aspectFill,
+//                                          options: nil)
+    }
+    
     func startDownload() {
         guard let downloadsDirectory else { return }
         downloader.downloadAlliCloudPhotos(to: downloadsDirectory) { [weak self] success, error in
@@ -86,4 +129,22 @@ class ViewController: NSViewController {
         }
     }
 
+}
+
+extension ViewController: NSCollectionViewDelegate, NSCollectionViewDataSource {
+    func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
+        result.count
+    }
+    
+    func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
+        guard let cell = collectionView.makeItem(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "PhotoCell"),
+                                                 for: indexPath) as? PhotoCell else {
+            fatalError()
+        }
+        let asset = result.object(at: indexPath.item)
+        
+        return cell
+    }
+    
+    
 }

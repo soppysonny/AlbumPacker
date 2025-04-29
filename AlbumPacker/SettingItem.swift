@@ -11,6 +11,17 @@ enum SettingType {
     case targetType
     case downloadBurst
     
+    var storageKey: String {
+        switch self {
+        case .downloadHidden:
+            return "downloadHidden"
+        case .targetType:
+            return "targetType"
+        case .downloadBurst:
+            return "downloadBurst"
+        }
+    }
+    
     var title: String {
         switch self {
         case .downloadHidden:
@@ -27,23 +38,40 @@ enum SettingType {
         case .downloadHidden, .downloadBurst:
             return TrueFalseOption.allCases
         case .targetType:
-            
+            return DownloadTargetType.allCases
         }
     }
     
 }
 
 protocol Option {
-    
+    var title: String { get }
 }
 
-enum DownloadTargetType {
+enum DownloadTargetType: CaseIterable, Option {
+    case all
+    case sharedAlbum
+    case iTunesSynced
+
     
+    
+    var title: String {
+        switch self {
+        case .all:
+            return "All".localized()
+        case .sharedAlbum:
+            return "Shared album".localized()
+        case .iTunesSynced:
+            return "iTunes synced".localized()
+        }
+    }
 }
 
 enum TrueFalseOption: Option, CaseIterable {
     case yes
     case no
+    
+    
     
     var title: String {
         switch self {
@@ -53,10 +81,4 @@ enum TrueFalseOption: Option, CaseIterable {
             return "no".localized()
         }
     }
-}
-
-struct SettingItem {
-    let title: String
-    let options: [String]
-    let storageKey: String
 }
