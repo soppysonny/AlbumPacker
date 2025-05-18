@@ -45,6 +45,7 @@ enum SettingType {
 }
 
 protocol Option {
+    static var allowMultipleSelection: Bool { get }
     var title: String { get }
 }
 
@@ -52,8 +53,8 @@ enum DownloadTargetType: CaseIterable, Option {
     case all
     case sharedAlbum
     case iTunesSynced
-
     
+    static var allowMultipleSelection: Bool { false }
     
     var title: String {
         switch self {
@@ -71,7 +72,7 @@ enum TrueFalseOption: Option, CaseIterable {
     case yes
     case no
     
-    
+    static var allowMultipleSelection: Bool { false }
     
     var title: String {
         switch self {
