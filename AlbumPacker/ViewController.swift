@@ -73,7 +73,8 @@ class ViewController: NSViewController {
         photoListView.dataSource = self
         photoListView.register(PhotoCell.self, forItemWithIdentifier: NSUserInterfaceItemIdentifier(rawValue: "PhotoCell"))
         downloadsDirectory = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
-        reloadPhotoList()
+//        reloadPhotoList()
+        startDownload()
     }
     
     

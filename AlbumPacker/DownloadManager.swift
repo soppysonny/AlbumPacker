@@ -32,8 +32,8 @@ class iCloudDownloader: NSObject {
             // 获取iCloud资源
             let fetchOptions = PHFetchOptions()
             fetchOptions.includeAssetSourceTypes = [.typeUserLibrary]
-            fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
-            fetchOptions.fetchLimit = 5
+            fetchOptions.predicate = NSPredicate(format: "mediaType = %d OR mediaType = %d",  PHAssetMediaType.video.rawValue, PHAssetMediaType.image.rawValue)
+            fetchOptions.fetchLimit = 100
             let assets = PHAsset.fetchAssets(with: fetchOptions)
             self?.processAssets(assets: assets, outputDirectory: directory)
         }
@@ -57,33 +57,55 @@ class iCloudDownloader: NSObject {
                 guard let self else { return }
                 // 检查本地可用性[3](@ref)
                 let resources = PHAssetResource.assetResources(for: asset)
-//                let isLocallyAvailable = resources.contains {
-//                    $0.type == .photo && ($0.value(forKey: "locallyAvailable") as? Bool ?? false)
-//                }
-//
-//                guard !isLocallyAvailable else { return }
                 
                 // 创建下载请求[1,5](@ref)
               
-                
-                PHImageManager.default().requestImageDataAndOrientation(
-                    for: asset,
-                    options: self.options
-                ) { (data, _, _, info) in
-                    guard let imageData = data else { return }
-                    
-                    // 生成唯一文件名[6](@ref)
-                    let fileName = "\(asset.originalFilename ?? UUID().uuidString)"
-                    let fileURL = outputDirectory.appendingPathComponent(fileName)
-                    
-                    do {
-                        try imageData.write(to: fileURL)
-                        processedCount += 1
-                        print("Downloaded \(processedCount)/\(totalCount): \(fileURL.path)")
-                    } catch {
-                        print("Write failed: \(error.localizedDescription)")
+                switch asset.mediaType {
+                case .image:
+                    PHImageManager.default().requestImageDataAndOrientation(
+                        for: asset,
+                        options: self.options
+                    ) { (data, _, _, info) in
+                        guard let imageData = data else { return }
+                        
+                        // 生成唯一文件名[6](@ref)
+                        let fileName = "\(asset.originalFilename ?? UUID().uuidString)"
+                        let fileURL = outputDirectory.appendingPathComponent(fileName)
+                        
+                        do {
+                            try imageData.write(to: fileURL)
+                            processedCount += 1
+                            print("Downloaded \(processedCount)/\(totalCount): \(fileURL.path)")
+                        } catch {
+                            print("Write failed: \(error.localizedDescription)")
+                        }
                     }
+                case .video:
+                    let options = PHVideoRequestOptions()
+                    options.version = .current
+                    options.isNetworkAccessAllowed = true
+                    options.deliveryMode = .highQualityFormat
+                    options.progressHandler = { progress, _, _, _ in
+                        print("video.prog:", progress)
+                    }
+                    PHImageManager.default().requestAVAsset(forVideo: asset, options: options) {
+                        (avAsset, _, info) in
+                        guard let urlAsset = avAsset as? AVURLAsset else {
+                            print("not avasset")
+                            return
+                        }
+                        let filename = asset.value(forKey: "filename") as? String ?? "video_\(Date().timeIntervalSince1970)"
+                        print(asset.value(forKey: "filename"), asset.value(forKey: "creationDate"))
+                        let fileUrl = outputDirectory.appendingPathComponent(filename)
+                        do {
+                            try FileManager.default.copyItem(at: urlAsset.url, to: fileUrl)
+                        } catch let error {
+                            print("video.error:", error.localizedDescription)
+                        }
+                    }
+                default: break
                 }
+                
             }
             self?.downloadQueue.addOperation(operation)
         }
